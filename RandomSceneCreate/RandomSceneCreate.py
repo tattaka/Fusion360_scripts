@@ -3,6 +3,7 @@
 
 import adsk.core, adsk.fusion, adsk.cam, traceback
 import math
+import random
 
 # Globals
 _app = adsk.core.Application.cast(None)
@@ -10,18 +11,20 @@ _ui = adsk.core.UserInterface.cast(None)
 _units = ''
 # Command inputs
 _standard = adsk.core.DropDownCommandInput.cast(None)
-_width = adsk.core.ValueCommandInput.cast(None)
-_height = adsk.core.ValueCommandInput.cast(None)
-_depth = adsk.core.ValueCommandInput.cast(None)
 _errMessage = adsk.core.TextBoxCommandInput.cast(None)
 
-_field_width = adsk.core.ValueCommandInput.cast(None)
-_field_height = adsk.core.ValueCommandInput.cast(None)
-_object_number = adsk.core.ValueCommandInput.cast(None)
-_object_width_min = adsk.core.ValueCommandInput.cast(None)
-_object_width_max = adsk.core.ValueCommandInput.cast(None)
-_object_height_min = adsk.core.ValueCommandInput.cast(None)
-_object_height_max = adsk.core.ValueCommandInput.cast(None)
+_fieldWidth = adsk.core.ValueCommandInput.cast(None)
+_fieldHeight = adsk.core.ValueCommandInput.cast(None)
+_objectNumber = adsk.core.StringValueCommandInput.cast(None)
+_objectWidthMin = adsk.core.ValueCommandInput.cast(None)
+_objectWidthMax = adsk.core.ValueCommandInput.cast(None)
+_objectHeightMin = adsk.core.ValueCommandInput.cast(None)
+_objectHeightMax = adsk.core.ValueCommandInput.cast(None)
+_objectDepthMin = adsk.core.ValueCommandInput.cast(None)
+_objectDepthMax = adsk.core.ValueCommandInput.cast(None)
+_cuboidEnable = adsk.core.BoolValueCommandInput.cast(None)
+_sphereEnable = adsk.core.BoolValueCommandInput.cast(None)
+_poleEnable = adsk.core.BoolValueCommandInput.cast(None)
 
 _handlers = []
 def run(context):
@@ -30,10 +33,10 @@ def run(context):
         _app = adsk.core.Application.get()
         _ui  = _app.userInterface
 
-        cmdDef = _ui.commandDefinitions.itemById('adskCuboidPythonScript')
+        cmdDef = _ui.commandDefinitions.itemById('adskRandomSceneCreatePythonScript')
         if not cmdDef:
             # Create a command definition.
-            cmdDef = _ui.commandDefinitions.addButtonDefinition('adskCuboidPythonScript', 'Cuboid', 'Creates a cuboid component', '')
+            cmdDef = _ui.commandDefinitions.addButtonDefinition('adskRandomSceneCreatePythonScript', 'RandomSceneCreate', 'Creates a RandomScene', '')
 
         # Connect to the command created event.
         onCommandCreated = CuboidCommandCreatedHandler()
@@ -117,7 +120,7 @@ class CuboidCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
                 standard = 'English'
             else:
                 standard = 'Metric'
-            standardAttrib = des.attributes.itemByName('Cuboid', 'standard')
+            standardAttrib = des.attributes.itemByName('RandomSceneCreate', 'standard')
             if standardAttrib:
                 standard = standardAttrib.value
 
@@ -126,26 +129,71 @@ class CuboidCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             else:
                 _units = 'mm'
 
-            width = str(1)
-            widthAttrib = des.attributes.itemByName('Cuboid', 'width')
-            if widthAttrib:
-                width = widthAttrib.value
+            fieldWidth = str(20)
+            fieldWidthAttrib = des.attributes.itemByName('RandomSceneCreate', 'fieldWidth')
+            if fieldWidthAttrib:
+                fieldWidth = fieldWidthAttrib.value
 
-            height = str(1)
-            heightAttrib = des.attributes.itemByName('Cuboid', 'height')
-            if heightAttrib:
-                height = heightAttrib.value
+            fieldHeight = str(20)
+            fieldHeightAttrib = des.attributes.itemByName('RandomSceneCreate', 'fieldHeight')
+            if fieldHeightAttrib:
+                fieldHeight = fieldHeightAttrib.value
 
-            depth = str(1)
-            depthAttrib = des.attributes.itemByName('Cuboid', 'depth')
-            if depthAttrib:
-                depth = depthAttrib.value
+            objectNumber = '1'
+            objectNumberAttrib = des.attributes.itemByName('RandomSceneCreate', 'objectNumber')
+            if objectNumberAttrib:
+                objectNumber = objectNumberAttrib.value
+
+            objectWidthMin = str(1)
+            objectWidthMinAttrib = des.attributes.itemByName('RandomSceneCreate', 'objectWidthMin')
+            if objectWidthMinAttrib:
+                objectWidthMin = objectWidthMinAttrib.value
+
+            objectWidthMax = str(5)
+            objectWidthMaxAttrib = des.attributes.itemByName('RandomSceneCreate', 'objectWidthMax')
+            if objectWidthMaxAttrib:
+                objectWidthMax = objectWidthMaxAttrib.value
+
+            objectHeightMin = str(1)
+            objectHeightMinAttrib = des.attributes.itemByName('RandomSceneCreate', 'objectHeightMin')
+            if objectHeightMinAttrib:
+                objectHeightMin = objectHeightMinAttrib.value
+
+            objectHeightMax = str(1)
+            objectHeightMaxAttrib = des.attributes.itemByName('RandomSceneCreate', 'objectHeightMax')
+            if objectHeightMaxAttrib:
+                objectHeightMax = objectHeightMaxAttrib.value
+
+            objectDepthMin = str(1)
+            objectDepthMinAttrib = des.attributes.itemByName('RandomSceneCreate', 'objectDepthMin')
+            if objectDepthMinAttrib:
+                objectDepthMin = objectDepthMinAttrib.value
+
+            objectDepthMax = str(5)
+            objectDepthMaxAttrib = des.attributes.itemByName('RandomSceneCreate', 'objectDepthMax')
+            if objectDepthMaxAttrib:
+                objectDepthMax = objectDepthMaxAttrib.value
+
+            cuboidEnable = False
+            cuboidEnableAttrib = des.attributes.itemByName('RandomSceneCreate', 'cuboidEnable')
+            if cuboidEnableAttrib:
+                cuboidEnable = cuboidEnableAttrib.value
+
+            sphereEnable = False
+            sphereEnableAttrib = des.attributes.itemByName('RandomSceneCreate', 'sphereEnable')
+            if sphereEnableAttrib:
+                sphereEnable = sphereEnableAttrib.value
+
+            poleEnable = False
+            poleEnableAttrib = des.attributes.itemByName('RandomSceneCreate', 'poleEnable')
+            if poleEnableAttrib:
+                poleEnable = poleEnableAttrib.value
 
             cmd = eventArgs.command
             cmd.isExecutedWhenPreEmpted = False
             inputs = cmd.commandInputs
 
-            global _standard, _width, _height, _depth, _errMessage
+            global _standard, _fieldWidth, _fieldHeight, _objectNumber, _objectWidthMin, _objectWidthMax, _objectHeightMin, _objectHeightMax, _objectDepthMin, _objectDepthMax, _cuboidEnable, _sphereEnable, _poleEnable, _errMessage
 
             _standard = inputs.addDropDownCommandInput('standard', 'Standard', adsk.core.DropDownStyles.TextListDropDownStyle)
             if standard == "English":
@@ -155,11 +203,30 @@ class CuboidCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
                 _standard.listItems.add('English', False)
                 _standard.listItems.add('Metric', True)
 
-            _width = inputs.addValueInput('width', 'Cuboid Width', _units, adsk.core.ValueInput.createByReal(float(width)))
+            _fieldWidth = inputs.addValueInput('fieldWidth', 'field Width', _units, adsk.core.ValueInput.createByReal(float(fieldWidth)))
 
-            _height = inputs.addValueInput('height', 'Cuboid Height', _units, adsk.core.ValueInput.createByReal(float(height)))
+            _fieldHeight = inputs.addValueInput('fieldHeight', 'field Height', _units, adsk.core.ValueInput.createByReal(float(fieldHeight)))
 
-            _depth = inputs.addValueInput('depth', 'Cuboid Depth', _units, adsk.core.ValueInput.createByReal(float(depth)))
+            _objectNumber = inputs.addStringValueInput('objectNumber', 'object Number', objectNumber)
+            #_ui.messageBox(str(int(float(objectNumber))))
+
+            _objectWidthMin = inputs.addValueInput('objectWidthMin', 'object Width Min', _units, adsk.core.ValueInput.createByReal(float(objectWidthMin)))
+
+            _objectWidthMax = inputs.addValueInput('objectWidthMax', 'object Width Max', _units, adsk.core.ValueInput.createByReal(float(objectWidthMax)))
+
+            _objectHeightMin = inputs.addValueInput('objectHeightMin', 'object Height Min', _units, adsk.core.ValueInput.createByReal(float(objectHeightMin)))
+
+            _objectHeightMax = inputs.addValueInput('objectHeightMax', 'object Height Max', _units, adsk.core.ValueInput.createByReal(float(objectHeightMax)))
+
+            _objectDepthMin = inputs.addValueInput('objectDepthMin', 'object Depth Min', _units, adsk.core.ValueInput.createByReal(float(objectDepthMin)))
+
+            _objectDepthMax = inputs.addValueInput('objectDepthMax', 'object Depth Max', _units, adsk.core.ValueInput.createByReal(float(objectDepthMax)))
+
+            _cuboidEnable = inputs.addBoolValueInput('cuboidEnable', 'cuboid Enable', True, '', True)
+
+            _sphereEnable = inputs.addBoolValueInput('sphereEnable', 'sphere Enable', True, '', True)
+
+            _poleEnable = inputs.addBoolValueInput('poleEnable', 'pole Enable', True, '', True)
 
             _errMessage = inputs.addTextBoxCommandInput('errMessage', '', '', 2, True)
             _errMessage.isFullWidth = True
@@ -195,17 +262,35 @@ class CuboidCommandExecuteHandler(adsk.core.CommandEventHandler):
             # Save the current values as attributes.
             des = adsk.fusion.Design.cast(_app.activeProduct)
             attribs = des.attributes
-            attribs.add('Cuboid', 'standard', _standard.selectedItem.name)
-            attribs.add('Cuboid', 'width', str(_width.value))
-            attribs.add('Cuboid', 'height', str(_height.value))
-            attribs.add('Cuboid', 'depth', str(_depth.value))
+            attribs.add('RandomSceneCreate', 'standard', _standard.selectedItem.name)
+            attribs.add('RandomSceneCreate', 'fieldWidth', str(_fieldWidth.value))
+            attribs.add('RandomSceneCreate', 'fieldHeight', str(_fieldHeight.value))
+            attribs.add('RandomSceneCreate', 'objectNumber', str(_objectNumber.value))
+            attribs.add('RandomSceneCreate', 'objectWidthMin', str(_objectWidthMin.value))
+            attribs.add('RandomSceneCreate', 'objectWidthMax', str(_objectWidthMax.value))
+            attribs.add('RandomSceneCreate', 'objectHeightMin', str(_objectHeightMin.value))
+            attribs.add('RandomSceneCreate', 'objectHeightMax', str(_objectHeightMax.value))
+            attribs.add('RandomSceneCreate', 'objectDepthMin', str(_objectDepthMin.value))
+            attribs.add('RandomSceneCreate', 'objectDepthMax', str(_objectDepthMax.value))
+            attribs.add('RandomSceneCreate', 'cuboidEnable', str(_cuboidEnable.value))
+            attribs.add('RandomSceneCreate', 'sphereEnable', str(_sphereEnable.value))
+            attribs.add('RandomSceneCreate', 'poleEnable', str(_poleEnable.value))
 
-            width = _width.value
-            height = _height.value
-            depth = _depth.value
+            fieldWidth = _fieldWidth.value
+            fieldHeight = _fieldHeight.value
+            objectNumber = int(_objectNumber.value)
+            objectWidthMin = _objectWidthMin.value
+            objectWidthMax = _objectWidthMax.value
+            objectHeightMin = _objectHeightMin.value
+            objectHeightMax = _objectHeightMax.value
+            objectDepthMin = _objectDepthMin.value
+            objectDepthMax = _objectDepthMax.value
+            cuboidEnable = _cuboidEnable.value
+            sphereEnable = _sphereEnable.value
+            poleEnable = _poleEnable.value
 
             # Create the cuboid.
-            cuboidComp = drawCuboid(des, width, height, depth)
+            #cuboidComp = drawCuboid(des, width, height, depth)
 
         except:
             if _ui:
@@ -233,12 +318,30 @@ class CuboidCommandInputChangedHandler(adsk.core.InputChangedEventHandler):
                 # has edited it, the value won't update in the dialog because
                 # apparently it remembers the units when the value was edited.
                 # Setting the value using the API resets this.
-                _width.value = _width.value
-                _width.unitType = _units
-                _height.value = _height.value
-                _height.unitType = _units
-                _depth.value = _depth.value
-                _depth.unitType = _units
+                _fieldWidth.value = _fieldWidth.value
+                _fieldWidth.unitType = _units
+                _fieldHeight.value = _fieldHeight.value
+                _fieldHeight.unitType = _units
+                _objectNumber.value = int(_objectNumber.value)
+                #_objectNumber.unitType = _units
+                _objectWidthMin.value = _objectWidthMin.value
+                _objectWidthMin.unitType = _units
+                _objectWidthMax.value = _objectWidthMax.value
+                _objectWidthMax.unitType = _units
+                _objectHeightMin.value = _objectHeightMin.value
+                _objectHeightMin.unitType = _units
+                _objectHeightMax.value = _objectHeightMax.value
+                _objectHeightMax.unitType = _units
+                _objectDepthMin.value = _objectDepthMin.value
+                _objectDepthMin.unitType = _units
+                _objectDepthMax.value = _objectDepthMax.value
+                _objectDepthMax.unitType = _units
+                _cuboidEnable.value = _cuboidEnable.value
+                _cuboidEnable.unitType = _units
+                _sphereEnable.value = _sphereEnable.value
+                _sphereEnable.unitType = _units
+                _poleEnable.value = _poleEnable.value
+                _poleEnable.unitType = _units
 
         except:
             if _ui:
@@ -256,39 +359,99 @@ class CuboidCommandValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
 
             des = adsk.fusion.Design.cast(_app.activeProduct)
 
-            result = getCommandInputValue(_width, _units)
+            result = getCommandInputValue(_fieldWidth, _units)
             if result[0] == False:
                 eventArgs.areInputsValid = False
                 return
             else:
-                width = result[1]
+                fieldWidth = result[1]
 
-            if width <= 0:
-                _errMessage.text = 'The width value should be greater than 0. It must be more than ' + des.unitsManager.formatInternalValue(0.1, _units, True)
+            if fieldWidth <= 0:
+                _errMessage.text = 'The width value should be greater than 0. It must be more than ' + des.unitsManager.formatInternalValue(0, _units, True)
                 eventArgs.areInputsValid = False
                 return
 
-            result = getCommandInputValue(_height, _units)
+            result = getCommandInputValue(_fieldHeight, _units)
             if result[0] == False:
                 eventArgs.areInputsValid = False
                 return
             else:
-                height = result[1]
+                fieldHeight = result[1]
 
-            if height <= 0:
-                _errMessage.text = 'The height value should be greater than 0. It must be more than ' + des.unitsManager.formatInternalValue(0.1, _units, True)
+            if fieldHeight <= 0:
+                _errMessage.text = 'The height value should be greater than 0. It must be more than ' + des.unitsManager.formatInternalValue(0, _units, True)
                 eventArgs.areInputsValid = False
                 return
 
-            result = getCommandInputValue(_depth, _units)
+            result = getCommandInputValue(_objectWidthMin, _units)
             if result[0] == False:
                 eventArgs.areInputsValid = False
                 return
             else:
-                depth = result[1]
+                objectWidthMin = result[1]
 
-            if depth <= 0:
-                _errMessage.text = 'The depth value should be greater than 0. It must be more than ' + des.unitsManager.formatInternalValue(0.1, _units, True)
+            if objectWidthMin <= 0:
+                _errMessage.text = 'The objectWidthMin should be greater than 0. It must be more than ' + des.unitsManager.formatInternalValue(0, _units, True)
+                eventArgs.areInputsValid = False
+                return
+
+            result = getCommandInputValue(_objectWidthMax, _units)
+            if result[0] == False:
+                eventArgs.areInputsValid = False
+                return
+            else:
+                objectWidthMax = result[1]
+
+            if objectWidthMax <= 0 or objectWidthMax < objectWidthMin:
+                _errMessage.text = 'The objectWidthMax should be greater than 0. Or objectWidthMax < objectWidthMin. It must be more than ' + des.unitsManager.formatInternalValue(objectWidthMin + 1, _units, True)
+                eventArgs.areInputsValid = False
+                return
+
+            result = getCommandInputValue(_objectHeightMin, _units)
+            if result[0] == False:
+                eventArgs.areInputsValid = False
+                return
+            else:
+                objectHeightMin = result[1]
+
+            if objectHeightMin <= 0:
+                _errMessage.text = 'The objectHeightMin should be greater than 0. It must be more than ' + des.unitsManager.formatInternalValue(0, _units, True)
+                eventArgs.areInputsValid = False
+                return
+
+            result = getCommandInputValue(_objectHeightMax, _units)
+            if result[0] == False:
+                eventArgs.areInputsValid = False
+                return
+            else:
+                objectHeightMax = result[1]
+
+            if objectHeightMax <= 0 or objectHeightMax < objectHeightMin:
+                _errMessage.text = 'The objectHeightMax should be greater than 0. Or objectHeightMax < objectHeightMin. It must be more than ' + des.unitsManager.formatInternalValue(objectHeightMin + 1, _units, True)
+                eventArgs.areInputsValid = False
+                return
+
+            result = getCommandInputValue(_objectDepthMin, _units)
+            if result[0] == False:
+                eventArgs.areInputsValid = False
+                return
+            else:
+                objectDepthMin = result[1]
+
+            if objectDepthMin <= 0:
+                _errMessage.text = 'The objectDepthMin should be greater than 0. It must be more than ' + des.unitsManager.formatInternalValue(0, _units, True)
+                eventArgs.areInputsValid = False
+                return
+
+            result = getCommandInputValue(_objectDepthMax, _units)
+            if result[0] == False:
+                eventArgs.areInputsValid = False
+                return
+            else:
+                objectDepthMax = result[1]
+
+            if objectDepthMax <= 0 or objectDepthMax < objectDepthMin:
+                _errMessage.text = 'The objectDepthMax should be greater than 0. Or objectDepthMax < objectDepthMin. It must be more than ' + des.unitsManager.formatInternalValue(objectDepthMin + 1, _units, True)
                 eventArgs.areInputsValid = False
                 return
 
