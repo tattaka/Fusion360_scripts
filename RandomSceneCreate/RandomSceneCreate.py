@@ -39,7 +39,7 @@ def run(context):
             cmdDef = _ui.commandDefinitions.addButtonDefinition('adskRandomSceneCreatePythonScript', 'RandomSceneCreate', 'Creates a RandomScene', '')
 
         # Connect to the command created event.
-        onCommandCreated = CuboidCommandCreatedHandler()
+        onCommandCreated = RandomSceneCreateCommandCreatedHandler()
         cmdDef.commandCreated.add(onCommandCreated)
         _handlers.append(onCommandCreated)
 
@@ -52,7 +52,7 @@ def run(context):
         if _ui:
             _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
 
-class CuboidCommandDestroyHandler(adsk.core.CommandEventHandler):
+class RandomSceneCreateCommandDestroyHandler(adsk.core.CommandEventHandler):
     def __init__(self):
         super().__init__()
     def notify(self, args):
@@ -93,7 +93,7 @@ def getCommandInputValue(commandInput, unitType):
             _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
 
 # Event handler for the commandCreated event.
-class CuboidCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
+class RandomSceneCreateCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def __init__(self):
         super().__init__()
     def notify(self, args):
@@ -232,19 +232,19 @@ class CuboidCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             _errMessage.isFullWidth = True
 
             # Connect to the command related events.
-            onExecute = CuboidCommandExecuteHandler()
+            onExecute = RandomSceneCreateCommandExecuteHandler()
             cmd.execute.add(onExecute)
             _handlers.append(onExecute)
 
-            onInputChanged = CuboidCommandInputChangedHandler()
+            onInputChanged = RandomSceneCreateCommandInputChangedHandler()
             cmd.inputChanged.add(onInputChanged)
             _handlers.append(onInputChanged)
 
-            onValidateInputs = CuboidCommandValidateInputsHandler()
+            onValidateInputs = RandomSceneCreateCommandValidateInputsHandler()
             cmd.validateInputs.add(onValidateInputs)
             _handlers.append(onValidateInputs)
 
-            onDestroy = CuboidCommandDestroyHandler()
+            onDestroy = RandomSceneCreateCommandDestroyHandler()
             cmd.destroy.add(onDestroy)
             _handlers.append(onDestroy)
         except:
@@ -252,7 +252,7 @@ class CuboidCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
                 _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
 
 # Event handler for the execute event.
-class CuboidCommandExecuteHandler(adsk.core.CommandEventHandler):
+class RandomSceneCreateCommandExecuteHandler(adsk.core.CommandEventHandler):
     def __init__(self):
         super().__init__()
     def notify(self, args):
@@ -291,13 +291,14 @@ class CuboidCommandExecuteHandler(adsk.core.CommandEventHandler):
 
             # Create the cuboid.
             #cuboidComp = drawCuboid(des, width, height, depth)
+            compScene = createScene(des, fieldWidth, fieldHeight, objectNumber, objectWidthMin, objectWidthMax, objectHeightMin, objectHeightMax, objectDepthMin, objectDepthMax, cuboidEnable, sphereEnable, poleEnable)
 
         except:
             if _ui:
                 _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
 
 # Event handler for the inputChanged event.
-class CuboidCommandInputChangedHandler(adsk.core.InputChangedEventHandler):
+class RandomSceneCreateCommandInputChangedHandler(adsk.core.InputChangedEventHandler):
     def __init__(self):
         super().__init__()
     def notify(self, args):
@@ -348,7 +349,7 @@ class CuboidCommandInputChangedHandler(adsk.core.InputChangedEventHandler):
                 _ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
 
 # Event handler for the validateInputs event.
-class CuboidCommandValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
+class RandomSceneCreateCommandValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
     def __init__(self):
         super().__init__()
     def notify(self, args):
@@ -358,6 +359,18 @@ class CuboidCommandValidateInputsHandler(adsk.core.ValidateInputsEventHandler):
             _errMessage.text = ''
 
             des = adsk.fusion.Design.cast(_app.activeProduct)
+
+            if not _objectNumber.value.isdigit():
+                _errMessage.text = 'The number of object must be a whole number.'
+                eventArgs.areInputsValid = False
+                return
+            else:
+                objectNumber = int(_objectNumber.value)
+
+            if objectNumber <= 0:
+                _errMessage.text = 'The number of teeth must be 1 or more.'
+                eventArgs.areInputsValid = False
+                return
 
             result = getCommandInputValue(_fieldWidth, _units)
             if result[0] == False:
@@ -520,6 +533,13 @@ def drawCuboid(design, width, height, depth):
 
         newComp.name = 'Cuboid (' + str(width*10) + "mm" + ' x ' + str(height*10) + "mm" + ' x ' + str(depth*10) + "mm" + ')'
         return newComp
+    except Exception as error:
+        _ui.messageBox("drawCuboid Failed : " + str(error))
+        return None
+
+def createScene(design, fieldWidth, fieldHeight, objectNumber, objectWidthMin, objectWidthMax, objectHeightMin, objectHeightMax, objectDepthMin, objectDepthMax, cuboidEnable, sphereEnable, poleEnable):
+    try:
+        pass
     except Exception as error:
         _ui.messageBox("drawCuboid Failed : " + str(error))
         return None
