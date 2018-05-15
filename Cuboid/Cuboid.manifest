@@ -1,0 +1,10 @@
+{
+	"autodeskProduct":	"Fusion360",
+	"type":	"script",
+	"author":	"tattaka",
+	"description":	{
+		"":	""
+	},
+	"supportedOS":	"mac",
+	"editEnabled":	true
+}
